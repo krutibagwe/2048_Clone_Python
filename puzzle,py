@@ -1,17 +1,20 @@
+
 from tkinter import Frame, Label, CENTER
 import random
 import logic
 import constants as c
 
+
 def gen():
     return random.randint(0, c.GRID_LEN - 1)
+
 
 class GameGrid(Frame):
     def __init__(self):
         Frame.__init__(self)
 
         self.grid()
-        self.master.title('2048')
+        self.master.title("2048")
         self.master.bind("<Key>", self.key_down)
 
         self.commands = {
@@ -38,11 +41,17 @@ class GameGrid(Frame):
         self.mainloop()
 
     def init_grid(self):
-        background = Frame(self, bg=c.BACKGROUND_COLOR_GAME,width=c.SIZE, height=c.SIZE)
+        background = Frame(
+            self,
+            bg=c.BACKGROUND_COLOR_GAME,
+            width=c.SIZE,
+            height=c.SIZE
+        )
         background.grid()
 
         for i in range(c.GRID_LEN):
             grid_row = []
+
             for j in range(c.GRID_LEN):
                 cell = Frame(
                     background,
@@ -50,64 +59,134 @@ class GameGrid(Frame):
                     width=c.SIZE / c.GRID_LEN,
                     height=c.SIZE / c.GRID_LEN
                 )
+
                 cell.grid(
                     row=i,
                     column=j,
                     padx=c.GRID_PADDING,
                     pady=c.GRID_PADDING
                 )
+
+                # Keep the cell size fixed and fill it with the label.
+                cell.grid_propagate(False)
+                cell.grid_rowconfigure(0, weight=1)
+                cell.grid_columnconfigure(0, weight=1)
+
                 t = Label(
                     master=cell,
                     text="",
                     bg=c.BACKGROUND_COLOR_CELL_EMPTY,
+                    fg="#776e65",
                     justify=CENTER,
+                    anchor=CENTER,
                     font=c.FONT,
                     width=5,
-                    height=2)
-                t.grid()
+                    height=2
+                )
+
+                t.grid(
+                    row=0,
+                    column=0,
+                    sticky="nsew"
+                )
+
                 grid_row.append(t)
+
             self.grid_cells.append(grid_row)
 
     def update_grid_cells(self):
         for i in range(c.GRID_LEN):
             for j in range(c.GRID_LEN):
                 new_number = self.matrix[i][j]
+                cell = self.grid_cells[i][j]
+
                 if new_number == 0:
-                    self.grid_cells[i][j].configure(text="",bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                else:
-                    self.grid_cells[i][j].configure(
-                        text=str(new_number),
-                        bg=c.BACKGROUND_COLOR_DICT[new_number],
-                        fg=c.CELL_COLOR_DICT[new_number]
+                    cell.configure(
+                        text="",
+                        bg=c.BACKGROUND_COLOR_CELL_EMPTY,
+                        fg="#776e65",
+                        font=c.FONT
                     )
+                else:
+                    # Reduce font size as tile numbers grow.
+                    if new_number < 100:
+                        font_size = 40
+                    elif new_number < 1000:
+                        font_size = 30
+                    elif new_number < 10000:
+                        font_size = 22
+                    else:
+                        font_size = 16
+
+                    # Use fallback colors for unlisted tile values.
+                    bg_color = c.BACKGROUND_COLOR_DICT.get(
+                        new_number, "#3c3a32"
+                    )
+                    text_color = c.CELL_COLOR_DICT.get(
+                        new_number, "#f9f6f2"
+                    )
+
+                    cell.configure(
+                        text=str(new_number),
+                        bg=bg_color,
+                        fg=text_color,
+                        font=("Verdana", font_size, "bold")
+                    )
+
         self.update_idletasks()
 
     def key_down(self, event):
         key = event.keysym
         print(event)
-        if key == c.KEY_QUIT: exit()
+
+        if key == c.KEY_QUIT:
+            exit()
+
         if key == c.KEY_BACK and len(self.history_matrixs) > 1:
             self.matrix = self.history_matrixs.pop()
             self.update_grid_cells()
-            print('back on step total step:', len(self.history_matrixs))
+            print(
+                "back on step total step:",
+                len(self.history_matrixs)
+            )
+
         elif key in self.commands:
             self.matrix, done = self.commands[key](self.matrix)
+
             if done:
                 self.matrix = logic.add_two(self.matrix)
-                # record last move
+
+                # Record the current move.
                 self.history_matrixs.append(self.matrix)
                 self.update_grid_cells()
-                if logic.game_state(self.matrix) == 'win':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                if logic.game_state(self.matrix) == 'lose':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+
+                if logic.game_state(self.matrix) == "win":
+                    self.grid_cells[1][1].configure(
+                        text="You",
+                        bg=c.BACKGROUND_COLOR_CELL_EMPTY
+                    )
+                    self.grid_cells[1][2].configure(
+                        text="Win!",
+                        bg=c.BACKGROUND_COLOR_CELL_EMPTY
+                    )
+
+                if logic.game_state(self.matrix) == "lose":
+                    self.grid_cells[1][1].configure(
+                        text="You",
+                        bg=c.BACKGROUND_COLOR_CELL_EMPTY
+                    )
+                    self.grid_cells[1][2].configure(
+                        text="Lose!",
+                        bg=c.BACKGROUND_COLOR_CELL_EMPTY
+                    )
 
     def generate_next(self):
         index = (gen(), gen())
+
         while self.matrix[index[0]][index[1]] != 0:
             index = (gen(), gen())
+
         self.matrix[index[0]][index[1]] = 2
+
 
 game_grid = GameGrid()
