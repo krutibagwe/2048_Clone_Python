@@ -62,3 +62,5 @@ KEY_UP_ALT2 = "i"
 KEY_DOWN_ALT2 = "k"
 KEY_LEFT_ALT2 = "j"
 KEY_RIGHT_ALT2 = "l"
+
+KEY_NEW_GAME = "n"
