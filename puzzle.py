@@ -82,6 +82,32 @@ class GameGrid(Frame):
                         fg=c.CELL_COLOR_DICT[new_number]
                     )
         self.update_idletasks()
+    def show_game_over(self, state):
+        if state == 'win':
+            message = "YOU WIN!"
+            color = "#edc22e"
+        else:
+            message = "GAME OVER!"
+            color = "#f65e3b"
+
+        overlay = Frame(
+            self,
+            bg=c.BACKGROUND_COLOR_GAME
+        )
+        overlay.place(
+            relx=0.5,
+            rely=0.5,
+            anchor="center"
+        )
+
+        Label(
+            overlay,
+            text=message,
+            font=("Verdana", 28, "bold"),
+            fg=color,
+            bg=c.BACKGROUND_COLOR_GAME
+        ).pack(padx=20, pady=15)
+
     def confirm_quit(self):
         if messagebox.askyesno("Quit Game", "Are you sure you want to quit?"):
                 self.master.destroy()
@@ -109,18 +135,9 @@ class GameGrid(Frame):
                 self.matrix = logic.add_two(self.matrix)
                 self.history_matrixs.append(self.matrix)
                 self.update_grid_cells()
-
-                if logic.game_state(self.matrix) == 'win':
-                    self.grid_cells[1][1].configure(
-                        text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(
-                        text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-
-                if logic.game_state(self.matrix) == 'lose':
-                    self.grid_cells[1][1].configure(
-                        text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(
-                        text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                state = logic.game_state(self.matrix)
+                if state in ('win', 'lose'):
+                    self.show_game_over(state)
     def generate_next(self):
         index = (gen(), gen())
         while self.matrix[index[0]][index[1]] != 0:
